@@ -10,7 +10,7 @@ class UrlContainer(ui.Container):
         super().__init__()
         to_mentions = ""
         if to_user is not None:
-            to_mentions = " " + ", ".join([x.mention for x in to_user])
+            to_mentions = " for " + ", ".join([x.mention for x in to_user])
         self.content = f"### Steam Invite from {from_user.mention}{to_mentions}\n"
         self.content += f"**Steam link:** \n{old_link}\n\n"
         self.content += f"**Hyperlink:** \n[{old_link}]({new_link})"
