@@ -1,12 +1,17 @@
-from discord import ui
+from typing import List
+
+from discord import ui, Member, User
 
 class UrlContainer(ui.Container):
     display: ui.TextDisplay
     content: str
 
-    def __init__(self, old_link: str, new_link: str):
+    def __init__(self, old_link: str, new_link: str, from_user: User|Member, to_user: List[User|Member]|None):
         super().__init__()
-        self.content = "### Steam Invite\n"
+        to_mentions = ""
+        if to_user is not None:
+            to_mentions = " " + ", ".join([x.mention for x in to_user])
+        self.content = f"### Steam Invite from {from_user.mention}{to_mentions}\n"
         self.content += f"**Steam link:** \n{old_link}\n\n"
         self.content += f"**Hyperlink:** \n[{old_link}]({new_link})"
         
@@ -34,14 +39,14 @@ class UrlView(ui.LayoutView):
     container: UrlContainer
     actionrow: UrlActionRow
 
-    def __init__(self, old_link: str, new_link: str, game_name: str, game_logo_url: str):
+    def __init__(self, old_link: str, new_link: str, game_name: str, game_logo_url: str, from_user: User | Member, mentions : List[User|Member] | None):
         self.old_link = old_link
         self.new_link = new_link
 
         super().__init__()
 
         self.header = GameInfoSection(game_name, game_logo_url)
-        self.container = UrlContainer(old_link, new_link)
+        self.container = UrlContainer(old_link, new_link, from_user, mentions)
         self.actionrow = UrlActionRow(new_link)
 
         self.add_item(self.header)
