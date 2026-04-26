@@ -10,3 +10,7 @@ def read_root():
 @app.get("/join/")
 def join(id1: int, id2: int, id3: int):
     return RedirectResponse(f"steam://joinlobby/{id1}/{id2}/{id3}")
+
+@app.get("/health")
+def health():
+    return "OK"
