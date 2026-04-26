@@ -10,7 +10,8 @@ def main(configFile: str):
 
     discord_token = cfp['TOKENS']['DISCORD']
     domain = cfp['DEFAULT']['domain']
-    ss = SteamSneggy(discord_token, domain)
+    backup_loc = cfp['DEFAULT']['backup_loc']
+    ss = SteamSneggy(discord_token, domain, backup_loc)
     ss.setup_commands()
     ss.start_bot()
 
