@@ -78,7 +78,7 @@ class SteamSneggy():
                     if pieces[1] == "message_type":
                         self.datastore.set_message_type(message.guild.id, MessageType(pieces[2]))
                         await message.channel.send(f"Message type has been set to {pieces[2]}")
-                        
+
             if message.content.startswith('$hello'):
                 await message.channel.send('Hello!')
 
