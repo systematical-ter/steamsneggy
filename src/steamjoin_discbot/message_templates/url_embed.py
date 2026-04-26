@@ -7,4 +7,4 @@ class UrlEmbed(Embed):
         super().__init__(title=game_name, url=new_link)
         self.set_thumbnail(url=game_logo_url)
 
-        self.add_field(name="Steam Link", value={old_link})
+        self.add_field(name="Steam Link", value=old_link)

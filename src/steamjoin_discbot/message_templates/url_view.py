@@ -6,7 +6,7 @@ class UrlContainer(ui.Container):
     display: ui.TextDisplay
     content: str
 
-    def __init__(self, old_link: str, new_link: str, from_user: User|Member, to_user: List[User|Member]|None):
+    def __init__(self, old_link: str, new_link: str, from_user: User|Member, to_user: List[User|Member]|None, game_name: str, game_logo_url: str):
         super().__init__()
         to_mentions = ""
         if to_user is not None:
@@ -15,8 +15,11 @@ class UrlContainer(ui.Container):
         self.content += f"**Steam link:** \n{old_link}\n\n"
         self.content += f"**Hyperlink:** \n[{old_link}]({new_link})"
         
+        self.header = GameInfoSection(game_name, game_logo_url)
+        
         self.display = ui.TextDisplay(content=self.content)
         self.add_item(self.display)
+        self.add_item(self.header)
 
 class UrlActionRow(ui.ActionRow):
     linkbutton: ui.Button
@@ -45,10 +48,8 @@ class UrlView(ui.LayoutView):
 
         super().__init__()
 
-        self.header = GameInfoSection(game_name, game_logo_url)
-        self.container = UrlContainer(old_link, new_link, from_user, mentions)
+        self.container = UrlContainer(old_link, new_link, from_user, mentions, game_name, game_logo_url)
         self.actionrow = UrlActionRow(new_link)
 
-        self.add_item(self.header)
         self.add_item(self.container)
         self.add_item(self.actionrow)

@@ -34,8 +34,8 @@ class SteamSneggy():
             found = re.search(self.steam_invite_regex, message.content)
             if found:
                 game_name, game_logo_url = self.fetch_game_info(found)
-                await message.reply(embed=UrlEmbed(found.group(0), self.create_new_link(found), game_name, game_logo_url, message.author, message.mentions))
-                #await message.reply(view=UrlView(found.group(0), self.create_new_link(found), game_name, game_logo_url, message.author, message.mentions))
+                #await message.reply(embed=UrlEmbed(found.group(0), self.create_new_link(found), game_name, game_logo_url, message.author, message.mentions))
+                await message.reply(view=UrlView(found.group(0), self.create_new_link(found), game_name, game_logo_url, message.author, message.mentions))
             if message.content.startswith('$hello'):
                 await message.channel.send('Hello!')
 
