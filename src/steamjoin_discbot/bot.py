@@ -49,8 +49,21 @@ class SteamSneggy():
                     return False
                 
                 game_name, game_logo_url = self.fetch_game_info(found)
+                
+                mentions = []
+                if message.reference and message.reference.message_id:
+                    msg = await message.channel.fetch_message(message.reference.message_id)
+                    mentions.append(msg.author)
+                if message.mentions is not None:
+                    for ment in message.mentions:
+                        if ment not in mentions:
+                            mentions.append(ment)
+                
+                if len(mentions) == 0 :
+                    mentions = None
+
                 #await message.reply(embed=UrlEmbed(found.group(0), self.create_new_link(found), game_name, game_logo_url, message.author, message.mentions))
-                await message.reply(view=UrlView(found.group(0), self.create_new_link(found), game_name, game_logo_url, message.author, message.mentions))
+                await message.reply(view=UrlView(found.group(0), self.create_new_link(found), game_name, game_logo_url, message.author, mentions))
             if message.content.startswith('$hello'):
                 await message.channel.send('Hello!')
 
