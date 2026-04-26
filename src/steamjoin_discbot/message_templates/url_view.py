@@ -6,7 +6,7 @@ class UrlContainer(ui.Container):
 
     def __init__(self, old_link: str, new_link: str):
         super().__init__()
-        self.content = "### Steam Invite Link\n"
+        self.content = "### Steam Invite\n"
         self.content += f"**Steam link:** \n{old_link}\n\n"
         self.content += f"**Hyperlink:** \n[{old_link}]({new_link})"
         
@@ -19,7 +19,7 @@ class UrlActionRow(ui.ActionRow):
     def __init__(self, new_link: str):
         super().__init__()
 
-        self.linkbutton = ui.Button(label="Open in browser", url=new_link)
+        self.linkbutton = ui.Button(label="Click here to join the lobby!", url=new_link)
         self.add_item(self.linkbutton)
 
 class GameInfoSection(ui.MediaGallery):
