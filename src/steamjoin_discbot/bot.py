@@ -1,6 +1,7 @@
 import discord
 import re
 import requests
+from requests.exceptions import ConnectionError
 
 from message_templates.url_view import UrlView
 from message_templates.url_embed import UrlEmbed
@@ -65,14 +66,20 @@ class SteamSneggy():
         return contents['name'], contents['header_image']
     
     async def health_check(self):
-        health_check = requests.get(f"{self.domain}/health")
-        if health_check.status_code != 200:
+        try :
+            health_check = requests.get(f"{self.domain}/health")
+            if health_check.status_code != 200:
+                if self.is_healthy:
+                    await self.client.change_presence(activity = self.not_working_activity, status=discord.Status.do_not_disturb)
+                    self.is_healthy = False
+                return False
+            else :
+                if not self.is_healthy:
+                    await self.client.change_presence(activity= self.working_activity, status=discord.Status.online)
+                    self.is_healthy = True
+                return True
+        except ConnectionError as err:
             if self.is_healthy:
                 await self.client.change_presence(activity = self.not_working_activity, status=discord.Status.do_not_disturb)
                 self.is_healthy = False
             return False
-        else :
-            if not self.is_healthy:
-                await self.client.change_presence(activity= self.working_activity, status=discord.Status.online)
-                self.is_healthy = True
-            return True
