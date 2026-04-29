@@ -122,7 +122,7 @@ class SteamSneggy():
                                 await message.channel.send(f"The following roles can change this bot's settings: {[r.mention for r in roles]}", allowed_mentions=discord.AllowedMentions.none())
                             case "big":
                                 if pieces[2] == "chungus":
-                                    await message.channel.send("Hollow give me $5")
+                                    await message.channel.send("<@848401094329237524> give me $5")
                     else :
                         await message.reply("Sorry, you don't have permissions to set my options!")
 
