@@ -45,7 +45,7 @@ class SteamSneggy():
         self.admin_id = admin_id
 
         self.logger = logging.getLogger(__name__)
-        logging.basicConfig(filename='events.log', level=logging.INFO)
+        logging.basicConfig(filename='events.log', level=logging.INFO, filemode="a")
 
         self.working_activity = Activity(type=ActivityType.listening, name="Listening for steam lobby links!")
         self.not_working_activity = Activity(type=ActivityType.competing, name="Cannot connect to web server...")
