@@ -7,6 +7,7 @@ from requests.exceptions import ConnectionError
 
 from message_templates.url_view import UrlView
 from message_templates.url_embed import UrlEmbed
+from message_templates.url_section import UrlSectionLayout
 from helpers import MessageType
 from datastore import Datastore
 
@@ -220,13 +221,14 @@ class SteamSneggy():
                 game_name, game_logo_url = self.fetch_game_info(found)
                 mentions = await self.get_mentions(message)
 
-                message_type = MessageType.default
+                message_type = MessageType.tiny
                 if message.guild is not None:
                     message_type = self.datastore.get_message_type(message.guild.id)
 
                 match message_type:
                     case MessageType.tiny:
-                        await message.reply(embed=UrlEmbed(found.group(0), self.create_new_link(found), game_name, game_logo_url, message.author, mentions))
+                        await message.reply(view=UrlSectionLayout(found.group(0), self.create_new_link(found), message.author, mentions, game_name, game_logo_url))
+                        #await message.reply(embed=UrlEmbed(found.group(0), self.create_new_link(found), game_name, game_logo_url, message.author, mentions))
                     case MessageType.default:
                         await message.reply(view=UrlView(found.group(0), self.create_new_link(found), game_name, game_logo_url, message.author, mentions))
                 
