@@ -10,11 +10,12 @@ from message_templates.url_embed import UrlEmbed
 from helpers import MessageType
 from datastore import Datastore
 
-from discord import User, Member, Intents, Client, Activity, ActivityType, Status, Message
+from discord import User, Member, Intents, Activity, ActivityType, Status, Message
+from discord.ext.commands import Bot
 
 class SteamSneggy():
     intents: Intents
-    client: Client
+    client: Bot
     token: str
     domain: str
 
@@ -32,7 +33,7 @@ class SteamSneggy():
         self.intents = Intents.default()
         self.intents.message_content = True
 
-        self.client = Client(intents=self.intents)
+        self.client = Bot(intents=self.intents, command_prefix="$sneggyset ")
         self.token = token
         self.domain = domain
 
@@ -49,6 +50,11 @@ class SteamSneggy():
         async def on_ready():
             await self.client.change_presence(activity= self.working_activity, status=Status.online)
             print(f'We have logged in as {self.client.user}')
+
+        @self.client.command()
+        async def test(self, ctx):
+            await ctx.send("asdf")
+            pass
 
         @self.client.event
         async def on_message(message: Message):
