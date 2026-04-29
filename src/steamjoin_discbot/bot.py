@@ -139,7 +139,7 @@ class SteamSneggy():
         return contents['name'], contents['header_image']
     
     def set_message_type(self, message: str, server_id: int):
-        reg = r"$sneggyset message_type (?P<type>(%s))" % "|".join([x.value for x in MessageType])
+        reg = r"\$sneggyset message_type (?P<type>(%s))" % "|".join([x.value for x in MessageType])
         res = re.match(reg, message)
         print(res)
         print(reg)
