@@ -120,7 +120,9 @@ class SteamSneggy():
                                 for r in self.datastore.get_allowed_roles(message.guild.id):
                                     roles.append(message.guild.get_role(r))
                                 await message.channel.send(f"The following roles can change this bot's settings: {[r.mention for r in roles]}", allowed_mentions=discord.AllowedMentions.none())
-                            
+                            case "big":
+                                if pieces[2] == "chungus":
+                                    await message.channel.send("Hollow give me $5")
                     else :
                         await message.reply("Sorry, you don't have permissions to set my options!")
 

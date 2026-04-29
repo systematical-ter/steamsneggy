@@ -43,7 +43,7 @@ class Datastore():
 
     def get_message_type(self, server_id: int) -> str:
         self._ensure_server_in_settings(server_id)
-        return self.server_settings[server_id].get('message_type', MessageType.Default)
+        return self.server_settings[server_id].get('message_type', MessageType.default)
 
     def _initialize_list_key(self, server_id: int, key: str):
         if key not in self.server_settings[server_id].keys():
