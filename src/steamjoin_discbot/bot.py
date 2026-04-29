@@ -10,8 +10,8 @@ from message_templates.url_embed import UrlEmbed
 from helpers import MessageType
 from datastore import Datastore
 
-from discord import User, Member, Intents, Activity, ActivityType, Status, Message
-from discord.ext.commands import Bot
+from discord import Role, User, Member, Intents, Activity, ActivityType, Status, Message
+from discord.ext.commands import Bot, Context
 
 class SteamSneggy():
     intents: Intents
@@ -33,7 +33,7 @@ class SteamSneggy():
         self.intents = Intents.default()
         self.intents.message_content = True
 
-        self.client = Bot(intents=self.intents, command_prefix="$sneggyset ")
+        self.client = Bot(intents=self.intents, command_prefix="$")
         self.token = token
         self.domain = domain
 
@@ -51,15 +51,144 @@ class SteamSneggy():
             await self.client.change_presence(activity= self.working_activity, status=Status.online)
             print(f'We have logged in as {self.client.user}')
 
-        @self.client.command()
-        async def test(self, ctx):
-            await ctx.send("asdf")
-            pass
+        @self.client.group(help="Commands to change SteamSneggy options.")
+        async def sneggyset(ctx: Context):
+            if ctx.invoked_subcommand is None or ctx.subcommand_passed == "help":
+                helpmsg = "```\n" \
+                    '$sneggyset :\n\n'\
+                    'Change various settings of the bot.\n\n' \
+                    'Commands:\n'\
+                    '    big chungus\tThis is entirely just to troll Hollow.\n' \
+                    '    message_type   Change the type of message the bot should send in response to steam links.\n' \
+                    '                   (Current options: tiny, default)\n' \
+                    '    permissions\tChange permissions. This lets you allow certain users/roles to change the bot settings.```'
+                await ctx.send(helpmsg)
+
+        @sneggyset.command(name="big", help="This is entirely just to troll Hollow.")
+        async def hihollow(ctx: Context, word):
+            if word == "chungus":
+                await ctx.send("<@848401094329237524> give me $5")
+
+        async def has_privleges(usr: User | Member, ctx: Context) -> bool:
+            if ctx.guild is None or isinstance(usr, User):
+                return False
+            if usr.id == ctx.guild.owner_id:
+                return True
+            return await self.is_allowed(usr.id, [x.id for x in usr.roles], ctx.guild.id)
+            
+        @sneggyset.command(name="message_type", help="Command to change the message type to send (tiny,default)")
+        async def set_message_type(ctx: Context, message_type: str):
+            if await has_privleges(ctx.author, ctx):
+                if ctx.guild is None:
+                    return
+                success = self.set_message_type(message_type, ctx.guild.id)
+                if success:
+                    await ctx.send(f"Message type has been set to {message_type}")
+                else :
+                    await ctx.send(f"Issue when trying to set message choice. Your options are: {", ".join([x.value for x in MessageType])}")
+        
+        @sneggyset.group(help = "Commands to change permissions options.")
+        async def permissions(ctx: Context):
+            if ctx.invoked_subcommand is None or ctx.subcommand_passed == "help":
+                helpmsg = "```\n" \
+                    '$sneggyset permissions :\n\n'\
+                    'Set permissions for users and roles.\n\n' \
+                    'Commands:\n'\
+                    '    users\t\tCommands to control user permissions (add, remove, list)\n'\
+                    '    roles\t\tCommands to control role permissions (add, remove, list)```'
+                await ctx.send(helpmsg)
+                return
+            if not await has_privleges(ctx.author, ctx) :
+                await ctx.send("You don't have permissions to run this command!")
+
+        @permissions.group(help="Commands to change USER permissions.")
+        async def users(ctx: Context):
+            if ctx.invoked_subcommand is None or ctx.subcommand_passed == "help":
+                helpmsg = "```\n" \
+                    '$sneggyset permissions users:\n\n'\
+                    'Set permissions for users in particular.\n\n' \
+                    'Commands:\n'\
+                    '    add\t\tAdd a user to the list of authorized users.\n'\
+                    '    remove\t  Remove a list from the list of authorized users.\n'\
+                    '    list\t\tList all users authorized to use this bot.```'
+                await ctx.send(helpmsg)
+
+        @users.command(name="add")
+        async def add_user(ctx: Context, user: User):
+            if ctx.guild is None:
+                return
+            success = self.add_user_message(user, ctx.guild.id)
+            if success:
+                await ctx.send(f"Added user {user.mention} to the elevated users list.", allowed_mentions=discord.AllowedMentions.none())
+            else :
+                await ctx.send("Issue when trying to add user. Please format your message as follows:\n```\n$sneggyset add_user @Systematical\n```")
+
+        @users.command(name="remove")
+        async def remove_user(ctx: Context, user: User):
+            if ctx.guild is None:
+                return
+            success = self.remove_user_message(user, ctx.guild.id)
+            if success :
+                await ctx.send(f"Removed user {user.mention} from the elevated users list.", allowed_mentions=discord.AllowedMentions.none())
+            else :
+                await ctx.send("Issue when trying to remove user. Please format your message as follows:\n```\n$sneggyset remove_user @Systematical\n```")
+        
+        @users.command(name="list")
+        async def list_users(ctx: Context):
+            members = []
+            if ctx.guild is None:
+                return
+            for u in self.datastore.get_allowed_users(ctx.guild.id):
+                members.append(ctx.guild.get_member(u))
+            await ctx.send(f"The following users can change this bot's settings (besides the server owner): {", ".join([m.mention for m in members])}", allowed_mentions=discord.AllowedMentions.none())
+
+        @permissions.group(help="Commands to change ROLE permissions")
+        async def roles(ctx: Context):
+            if ctx.invoked_subcommand is None or ctx.subcommand_passed == "help":
+                helpmsg = "```\n" \
+                    '$sneggyset permissions roles:\n\n'\
+                    'Set permissions for roles in particular.\n\n' \
+                    'Commands:\n'\
+                    '    add\t\tAdd a role to the list of authorized roles.\n'\
+                    '    remove\t  Remove a list from the list of authorized roles.\n'\
+                    '    list\t\tList all roles authorized to use this bot.```'
+                await ctx.send(helpmsg)
+
+        @roles.command("add")
+        async def add_role(ctx: Context, role: Role):
+            if ctx.guild is None:
+                return
+            success = self.add_role_message(role, ctx.guild.id)
+            if success :
+                await ctx.send(f"Added role {role.mention} to the elevated roles list.", allowed_mentions=discord.AllowedMentions.none())
+            else :
+                await ctx.send("Issue when trying to add role. Please format your message as follows:\n```\n$sneggyset add_role @BotManager\n```")
+        
+        @roles.command("remove")
+        async def remove_role(ctx: Context, role: Role):
+            if ctx.guild is None:
+                return
+            success = self.remove_role_message(role, ctx.guild.id)
+            if success :
+                await ctx.send(f"Removed role {role.mention} from the elevated roles list.", allowed_mentions=discord.AllowedMentions.none())
+            else :
+                await ctx.send("Issue when trying to remove role. Please format your message as follows:\n```\n$sneggyset remove_role @BotManager\n```")
+
+        @roles.command("list")
+        async def list_roles(ctx: Context):
+            roles = []
+            if ctx.guild is None:
+                return
+            for r in self.datastore.get_allowed_roles(ctx.guild.id):
+                roles.append(ctx.guild.get_role(r))
+            await ctx.send(f"The following roles can change this bot's settings: {", ".join([r.mention for r in roles])}", allowed_mentions=discord.AllowedMentions.none())
 
         @self.client.event
         async def on_message(message: Message):
             if message.author == self.client.user:
                 return
+
+            await self.client.process_commands(message)
 
             found = re.search(self.steam_invite_regex, message.content)
             if found:
@@ -79,62 +208,6 @@ class SteamSneggy():
                     case MessageType.default:
                         await message.reply(view=UrlView(found.group(0), self.create_new_link(found), game_name, game_logo_url, message.author, mentions))
                 
-
-            if message.content.startswith('$sneggyset'):
-                if message.guild is not None and isinstance(message.author, Member):
-                    if message.guild.owner_id == message.author.id or await self.is_allowed(message.author.id, [x.id for x in message.author.roles], message.guild.id):
-                        pieces = message.content.split(" ")
-                        print(pieces)
-                        match pieces[1]:
-                            case "message_type":
-                                success = self.set_message_type(message.content, message.guild.id)
-                                if success:
-                                    await message.channel.send(f"Message type has been set to {pieces[2]}")
-                                else :
-                                    await message.channel.send(f"Issue when trying to set message choice. Your options are: {", ".join([x.value for x in MessageType])}")
-                            case "add_user":
-                                success = self.add_user_message(message, message.guild.id)
-                                if success :
-                                    await message.channel.send(f"Added user {message.mentions[0].mention} to the elevated users list.", allowed_mentions=discord.AllowedMentions.none())
-                                else :
-                                    await message.channel.send("Issue when trying to add user. Please format your message as follows:\n```\n$sneggyset add_user @Systematical\n```")
-                            case "remove_user":
-                                success = self.remove_user_message(message, message.guild.id)
-                                if success :
-                                    await message.channel.send(f"Removed user {message.mentions[0].mention} from the elevated users list.", allowed_mentions=discord.AllowedMentions.none())
-                                else :
-                                    await message.channel.send("Issue when trying to remove user. Please format your message as follows:\n```\n$sneggyset remove_user @Systematical\n```")
-                            case "list_user":
-                                members = []
-                                for u in self.datastore.get_allowed_users(message.guild.id):
-                                    members.append(message.guild.get_member(u))
-                                await message.channel.send(f"The following users can change this bot's settings (besides the server owner): {[m.mention for m in members]}", allowed_mentions=discord.AllowedMentions.none())
-                            case "add_role":
-                                success = self.add_role_message(message, message.guild.id)
-                                if success :
-                                    await message.channel.send(f"Added role {message.role_mentions[0].mention} to the elevated roles list.", allowed_mentions=discord.AllowedMentions.none())
-                                else :
-                                    await message.channel.send("Issue when trying to add role. Please format your message as follows:\n```\n$sneggyset add_role @BotManager\n```")
-                            case "remove_role":
-                                success = self.remove_role_message(message, message.guild.id)
-                                if success :
-                                    await message.channel.send(f"Removed role {message.role_mentions[0].mention} from the elevated roles list.", allowed_mentions=discord.AllowedMentions.none())
-                                else :
-                                    await message.channel.send("Issue when trying to remove role. Please format your message as follows:\n```\n$sneggyset remove_role @BotManager\n```")
-                            case "list_role":
-                                roles = []
-                                for r in self.datastore.get_allowed_roles(message.guild.id):
-                                    roles.append(message.guild.get_role(r))
-                                await message.channel.send(f"The following roles can change this bot's settings: {[r.mention for r in roles]}", allowed_mentions=discord.AllowedMentions.none())
-                            case "big":
-                                if pieces[2] == "chungus":
-                                    await message.channel.send("<@848401094329237524> give me $5")
-                    else :
-                        await message.reply("Sorry, you don't have permissions to set my options!")
-
-            if message.content.startswith('$hello'):
-                await message.channel.send('Hello!')
-
     def start_bot(self):
         self.client.run(self.token)
 
@@ -146,68 +219,26 @@ class SteamSneggy():
         contents = requests.get(f"https://store.steampowered.com/api/appdetails/?appids={game_id}").json()[game_id]['data']
         return contents['name'], contents['header_image']
     
-    def set_message_type(self, message: str, server_id: int):
-        reg = r"\$sneggyset message_type (?P<type>(%s))" % "|".join([x.value for x in MessageType])
-        res = re.match(reg, message)
-        print(res)
-        print(reg)
-        print(message)
-        if not res:
-            return False
-        
-        self.datastore.set_message_type(server_id, MessageType(res['type']))
+    def set_message_type(self, type: str, server_id: int):
+        if MessageType.has_value(type):
+            self.datastore.set_message_type(server_id, MessageType(type))
+            return True
+        return False
+    
+    def add_user_message(self, user: User, server_id: int):
+        self.datastore.add_allowed_user(server_id, user.id)
         return True
     
-    def add_user_message(self, message: discord.Message, server_id: int):
-        print(message.content)
-        reg = r"\$sneggyset add_user \<@(?P<user_id>[0-9]+)\>"
-        res = re.match(reg, message.content)
-        if not res:
-            return False
-        
-        if len(message.mentions) == 0:
-            return False
-        
-        self.datastore.add_allowed_user(server_id, int(res['user_id']))
+    def remove_user_message(self, user: User, server_id: int):
+        self.datastore.remove_allowed_user(server_id, user.id)
         return True
     
-    def remove_user_message(self, message: discord.Message, server_id: int):
-        print(message.content)
-        reg = r"\$sneggyset remove_user \<@(?P<user_id>[0-9]+)\>"
-        res = re.match(reg, message.content)
-        if not res:
-            return False
-        
-        if len(message.mentions) == 0:
-            return False
-        
-        self.datastore.remove_allowed_user(server_id, int(res['user_id']))
+    def add_role_message(self, role: Role, server_id: int):
+        self.datastore.add_allowed_role(server_id, role.id)
         return True
     
-    def add_role_message(self, message: discord.Message, server_id: int):
-        print(message.content)
-        reg = r"\$sneggyset add_role \<@&(?P<role_id>[0-9]+)\>"
-        res = re.match(reg, message.content)
-        if not res:
-            return False
-        
-        if len(message.role_mentions) == 0:
-            return False
-        
-        self.datastore.add_allowed_role(server_id, int(res['role_id']))
-        return True
-    
-    def remove_role_message(self, message: discord.Message, server_id: int):
-        print(message.content)
-        reg = r"\$sneggyset remove_role \<@&(?P<role_id>[0-9]+)\>"
-        res = re.match(reg, message.content)
-        if not res:
-            return False
-        
-        if len(message.role_mentions) == 0:
-            return False
-        
-        self.datastore.remove_allowed_role(server_id, int(res['role_id']))
+    def remove_role_message(self, role: Role, server_id: int):
+        self.datastore.remove_allowed_role(server_id, role.id)
         return True
 
     async def is_allowed(self, author_id: int, author_roles: List[int], server_id: int):
