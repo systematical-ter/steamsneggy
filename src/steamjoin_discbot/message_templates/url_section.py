@@ -15,6 +15,6 @@ class UrlSectionLayout(ui.LayoutView):
 
     def __init__(self, old_link: str, new_link: str, from_user: User | Member, to_user: List[User|Member] | None, game_title, game_image):
         super().__init__()
-        section = UrlSection(old_link, new_link, from_user, to_user, game_title, game_image)
+        section = ui.Container(UrlSection(old_link, new_link, from_user, to_user, game_title, game_image))
 
         self.add_item(section)
