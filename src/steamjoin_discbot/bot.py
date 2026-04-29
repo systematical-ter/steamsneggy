@@ -78,7 +78,11 @@ class SteamSneggy():
             
         @sneggyset.command(name="message_type", help="Command to change the message type to send (tiny,default)")
         async def set_message_type(ctx: Context, message_type: str):
-            if await has_privleges(ctx.author, ctx):
+            if not await has_privleges(ctx.author, ctx) :
+                user = await self.client.fetch_user(ctx.author.id)
+                await user.send(f"You don't have permissions to run this command: '$sneggyset message_type' {f'in server {ctx.guild.name}' if ctx.guild is not None else ""}.")
+                return
+            else:
                 if ctx.guild is None:
                     return
                 success = self.set_message_type(message_type, ctx.guild.id)
@@ -89,6 +93,10 @@ class SteamSneggy():
         
         @sneggyset.group(help = "Commands to change permissions options.")
         async def permissions(ctx: Context):
+            if not await has_privleges(ctx.author, ctx) :
+                user = await self.client.fetch_user(ctx.author.id)
+                await user.send(f"You don't have permissions to run this command: '$sneggyset permissions' {f'in server {ctx.guild.name}' if ctx.guild is not None else ""}.")
+                return
             if ctx.invoked_subcommand is None or ctx.subcommand_passed == "help":
                 helpmsg = "```\n" \
                     '$sneggyset permissions :\n\n'\
@@ -98,8 +106,6 @@ class SteamSneggy():
                     '    roles\t\tCommands to control role permissions (add, remove, list)```'
                 await ctx.send(helpmsg)
                 return
-            if not await has_privleges(ctx.author, ctx) :
-                await ctx.send("You don't have permissions to run this command!")
 
         @permissions.group(help="Commands to change USER permissions.")
         async def users(ctx: Context):
