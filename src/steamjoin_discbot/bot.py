@@ -11,7 +11,7 @@ from helpers import MessageType
 from datastore import Datastore
 
 from discord import Role, User, Member, Intents, Activity, ActivityType, Status, Message
-from discord.ext.commands import Bot, Context
+from discord.ext.commands import Bot, Context, cooldown, BucketType
 
 class SteamSneggy():
     intents: Intents
@@ -65,6 +65,7 @@ class SteamSneggy():
                 await ctx.send(helpmsg)
 
         @sneggyset.command(name="big", help="This is entirely just to troll Hollow.")
+        @cooldown(1,600, BucketType.guild)
         async def hihollow(ctx: Context, word):
             if word == "chungus":
                 await ctx.send("<@848401094329237524> give me $5")
