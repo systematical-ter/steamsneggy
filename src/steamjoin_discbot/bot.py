@@ -63,14 +63,14 @@ class SteamSneggy():
                 game_name, game_logo_url = self.fetch_game_info(found)
                 mentions = await self.get_mentions(message)
 
-                message_type = MessageType.Default
+                message_type = MessageType.default
                 if message.guild is not None:
                     message_type = self.datastore.get_message_type(message.guild.id)
 
                 match message_type:
-                    case MessageType.Tiny:
+                    case MessageType.tiny:
                         await message.reply(embed=UrlEmbed(found.group(0), self.create_new_link(found), game_name, game_logo_url, message.author, mentions))
-                    case MessageType.Default:
+                    case MessageType.default:
                         await message.reply(view=UrlView(found.group(0), self.create_new_link(found), game_name, game_logo_url, message.author, mentions))
                 
 
@@ -78,6 +78,7 @@ class SteamSneggy():
                 if message.guild is not None and isinstance(message.author, Member):
                     if message.guild.owner_id == message.author.id or await self.is_allowed(message.author.id, [x.id for x in message.author.roles], message.guild.id):
                         pieces = message.content.split(" ")
+                        print(pieces)
                         match pieces[1]:
                             case "message_type":
                                 success = self.set_message_type(message.content, message.guild.id)
@@ -138,8 +139,11 @@ class SteamSneggy():
         return contents['name'], contents['header_image']
     
     def set_message_type(self, message: str, server_id: int):
-        reg = f"$sneggyset message_type (?P<type>({"|".join([x.value for x in MessageType])}))"
+        reg = r"$sneggyset message_type (?P<type>(%s))" % "|".join([x.value for x in MessageType])
         res = re.match(reg, message)
+        print(res)
+        print(reg)
+        print(message)
         if not res:
             return False
         
