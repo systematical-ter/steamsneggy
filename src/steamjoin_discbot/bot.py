@@ -13,6 +13,8 @@ from datastore import Datastore
 from discord import Role, User, Member, Intents, Activity, ActivityType, Status, Message
 from discord.ext.commands import Bot, Context, cooldown, BucketType
 
+import logging
+
 class SteamSneggy():
     intents: Intents
     client: Bot
@@ -42,6 +44,9 @@ class SteamSneggy():
         self.is_healthy = True
         self.admin_id = admin_id
 
+        self.logger = logging.getLogger(__name__)
+        logging.basicConfig(filename='events.log', level=logging.INFO)
+
         self.working_activity = Activity(type=ActivityType.listening, name="Listening for steam lobby links!")
         self.not_working_activity = Activity(type=ActivityType.competing, name="Cannot connect to web server...")
 
@@ -53,6 +58,8 @@ class SteamSneggy():
 
         @self.client.group(help="Commands to change SteamSneggy options.")
         async def sneggyset(ctx: Context):
+            if ctx.guild is None:
+                return
             if ctx.invoked_subcommand is None or ctx.subcommand_passed == "help":
                 helpmsg = "```\n" \
                     '$sneggyset :\n\n'\
@@ -67,6 +74,8 @@ class SteamSneggy():
         @sneggyset.command(name="big", help="This is entirely just to troll Hollow.")
         @cooldown(1,600, BucketType.guild)
         async def hihollow(ctx: Context, word):
+            if ctx.guild is None:
+                return
             if word == "chungus":
                 await ctx.send("<@848401094329237524> give me $5")
 
@@ -79,13 +88,14 @@ class SteamSneggy():
             
         @sneggyset.command(name="message_type", help="Command to change the message type to send (tiny,default)")
         async def set_message_type(ctx: Context, message_type: str):
+            if ctx.guild is None:
+                return
             if not await has_privleges(ctx.author, ctx) :
                 user = await self.client.fetch_user(ctx.author.id)
+                self.logger.info(msg=f"User {ctx.author.name} tried to run command message_type {f'in server {ctx.guild.name}' if ctx.guild is not None else ""}")
                 await user.send(f"You don't have permissions to run this command: '$sneggyset message_type' {f'in server {ctx.guild.name}' if ctx.guild is not None else ""}.")
                 return
             else:
-                if ctx.guild is None:
-                    return
                 success = self.set_message_type(message_type, ctx.guild.id)
                 if success:
                     await ctx.send(f"Message type has been set to {message_type}")
@@ -94,8 +104,11 @@ class SteamSneggy():
         
         @sneggyset.group(help = "Commands to change permissions options.")
         async def permissions(ctx: Context):
+            if ctx.guild is None:
+                return
             if not await has_privleges(ctx.author, ctx) :
                 user = await self.client.fetch_user(ctx.author.id)
+                self.logger.info(msg=f"User {ctx.author.name} tried to run command sneggyset permissions {f'in server {ctx.guild.name}' if ctx.guild is not None else ""}")
                 await user.send(f"You don't have permissions to run this command: '$sneggyset permissions' {f'in server {ctx.guild.name}' if ctx.guild is not None else ""}.")
                 return
             if ctx.invoked_subcommand is None or ctx.subcommand_passed == "help":
@@ -193,6 +206,8 @@ class SteamSneggy():
         @self.client.event
         async def on_message(message: Message):
             if message.author == self.client.user:
+                return
+            if message.guild is None:
                 return
 
             await self.client.process_commands(message)
