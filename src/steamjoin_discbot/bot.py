@@ -23,7 +23,7 @@ class SteamSneggy():
     working_activity: Activity
     not_working_activity: Activity
 
-    def __init__(self, token, domain, backup_loc: str, admin_id: int):
+    def __init__(self, token, domain):
         self.intents = Intents.default()
         self.intents.message_content = True
 
