@@ -68,7 +68,7 @@ class SteamSneggy():
     def fetch_game_info(self, match: re.Match):
         game_id = match['game_id']
         response = requests.get(f"https://store.steampowered.com/api/appdetails/?appids={game_id}").json()
-        found_key = response.keys()[0]
+        found_key = list(response.keys())[0]
         contents = response[found_key]['data']
         return contents['name'], contents['header_image']
     
