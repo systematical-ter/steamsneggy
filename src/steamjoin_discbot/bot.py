@@ -67,7 +67,7 @@ class SteamSneggy():
     
     def fetch_game_info(self, match: re.Match):
         game_id = match['game_id']
-        contents = requests.get(f"https://store.steampowered.com/api/appdetails/?appids={game_id}").json()[game_id]['data']
+        contents = requests.get(f"https://store.steampowered.com/api/appdetails/?appids={game_id}").json()[0]['data']
         return contents['name'], contents['header_image']
     
     async def get_mentions(self, message: Message) -> List[User|Member] | None:
